@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package sms;
+
+service Sms {
+    rpc SendVerificationCode(SendVerificationCodeRequest) returns (google.protobuf.Empty) {}
+    rpc SendOrderConfirmation(SendOrderConfirmationRequest) returns (google.protobuf.Empty) {}
+    rpc SendShippingNotice(SendShippingNoticeRequest) returns (google.protobuf.Empty) {}
+
+    rpc CheckVerificationCode(CheckVerificationCodeRequest) returns (CheckVerificationCodeResult) {}
+}
+
+message SendVerificationCodeRequest {
+    string phoneNumber = 1;
+    string code = 2;
+}
+
+message SendOrderConfirmationRequest {
+    string phoneNumber = 1;
+    string name = 2;
+    string orderId = 3;
+}
+
+message SendShippingNoticeRequest {
+    string phoneNumber = 1;
+    string courierCompany = 2;
+    string waybillNumber = 3;
+}
+
+message CheckVerificationCodeRequest {
+    string phoneNumber = 1;
+    string code = 2;
+}
+
+message CheckVerificationCodeResult {
+    bool success = 1;
+}

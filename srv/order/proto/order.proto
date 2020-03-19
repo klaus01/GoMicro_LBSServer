@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+package order;
+
+service Order {
+    rpc Get(GetRequest) returns (OrderObject) {}
+    rpc Search(SearchRequest) returns (SearchResult) {}
+    rpc Create(CreateRequest) returns (CreateResult) {}
+    rpc SetDeliveryInfo(SetDeliveryInfoRequest) returns (google.protobuf.Empty) {}
+    rpc SetPayInfo(SetPayInfoRequest) returns (google.protobuf.Empty) {}
+}
+
+message GetRequest {
+    string orderId = 1;
+}
+
+message SearchRequest {
+    uint32 pageNo = 1;
+    uint32 pageSize = 2;
+    google.protobuf.Timestamp beginDateTime = 3;
+    google.protobuf.Timestamp endDateTime = 4;
+    string orderId = 5;
+    string phoneNumber = 6;
+    bool isShipped = 7;
+}
+
+message SearchResult {
+    uint32 pageNo = 1;
+    uint32 pageTotal = 2;
+    repeated OrderObject datas = 3;
+}
+
+message OrderObject {
+    string orderId = 1;
+    google.protobuf.Timestamp createAt = 2;
+    string productName = 3;
+    float productAmount = 4;
+    string name = 5;
+    string phoneNumber = 6;
+    string province = 7;
+    string city = 8;
+    string district = 9;
+    string address = 10;
+
+    enum PayStatus {
+        BE_PAID = 0;
+        PAID = 1;
+        PAY_EXCEPTION = 2;
+    }
+    PayStatus payStatus = 11;
+    OrderPayInfo payInfo = 12;
+    OrderDeliveryInfo deliveryInfo = 13;
+}
+
+message OrderPayInfo {
+    string modeName = 1;
+    float money = 2;
+    google.protobuf.Timestamp createAt = 3;
+}
+
+message OrderDeliveryInfo {
+    string courierCompany = 1;
+    string waybillNumber = 2;
+    google.protobuf.Timestamp createAt = 3;
+}
+
+message CreateRequest {
+    string productName = 1;
+    float productAmount = 2;
+    string name = 3;
+    string phoneNumber = 4;
+    string smsCode = 5;
+    string province = 6;
+    string city = 7;
+    string address = 8;
+    uint64 time = 9;
+    string sign = 10;
+}
+
+message CreateResult {
+    string orderId = 1;
+}
+
+message SetDeliveryInfoRequest {
+    string orderId = 1;
+    string courierCompany = 2;
+    string waybillNumber = 3;
+}
+
+message SetPayInfoRequest {
+    string orderId = 1;
+    string modeName = 2;
+    float money = 3;
+}
