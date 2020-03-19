@@ -1,0 +1,8 @@
+appID: ""
+accountSID: ""
+authToken: ""
+templateIDs:
+  verificationCode: "466633"
+  orderConfirmation: "463302"
+  shippingNotice: "463301"
+smsCodeExpireAfterSeconds: 600

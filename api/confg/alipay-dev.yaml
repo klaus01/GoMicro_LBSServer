@@ -1,0 +1,11 @@
+pid: ""
+appID: ""
+alipayPublicKey: |-
+  -----BEGIN PUBLIC KEY-----
+  
+  -----END PUBLIC KEY-----
+appPrivateKey: |-
+  -----BEGIN RSA PRIVATE KEY-----
+  
+  -----END RSA PRIVATE KEY-----
+notifyURL: "http://127.0.0.1/alipay/notify"
