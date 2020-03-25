@@ -5,11 +5,20 @@ import "google/protobuf/empty.proto";
 package sms;
 
 service Sms {
+    rpc CreateVerificationCode(CreateVerificationCodeRequest) returns (CreateVerificationCodeResult) {}
+    rpc CheckVerificationCode(CheckVerificationCodeRequest) returns (CheckVerificationCodeResult) {}
+
     rpc SendVerificationCode(SendVerificationCodeRequest) returns (google.protobuf.Empty) {}
     rpc SendOrderConfirmation(SendOrderConfirmationRequest) returns (google.protobuf.Empty) {}
     rpc SendShippingNotice(SendShippingNoticeRequest) returns (google.protobuf.Empty) {}
+}
 
-    rpc CheckVerificationCode(CheckVerificationCodeRequest) returns (CheckVerificationCodeResult) {}
+message CreateVerificationCodeRequest {
+    string phoneNumber = 1;
+}
+
+message CreateVerificationCodeResult {
+    string code = 1;
 }
 
 message SendVerificationCodeRequest {

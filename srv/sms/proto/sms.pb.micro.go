@@ -35,10 +35,11 @@ var _ server.Option
 // Client API for Sms service
 
 type SmsService interface {
+	CreateVerificationCode(ctx context.Context, in *CreateVerificationCodeRequest, opts ...client.CallOption) (*CreateVerificationCodeResult, error)
+	CheckVerificationCode(ctx context.Context, in *CheckVerificationCodeRequest, opts ...client.CallOption) (*CheckVerificationCodeResult, error)
 	SendVerificationCode(ctx context.Context, in *SendVerificationCodeRequest, opts ...client.CallOption) (*empty.Empty, error)
 	SendOrderConfirmation(ctx context.Context, in *SendOrderConfirmationRequest, opts ...client.CallOption) (*empty.Empty, error)
 	SendShippingNotice(ctx context.Context, in *SendShippingNoticeRequest, opts ...client.CallOption) (*empty.Empty, error)
-	CheckVerificationCode(ctx context.Context, in *CheckVerificationCodeRequest, opts ...client.CallOption) (*CheckVerificationCodeResult, error)
 }
 
 type smsService struct {
@@ -51,6 +52,26 @@ func NewSmsService(name string, c client.Client) SmsService {
 		c:    c,
 		name: name,
 	}
+}
+
+func (c *smsService) CreateVerificationCode(ctx context.Context, in *CreateVerificationCodeRequest, opts ...client.CallOption) (*CreateVerificationCodeResult, error) {
+	req := c.c.NewRequest(c.name, "Sms.CreateVerificationCode", in)
+	out := new(CreateVerificationCodeResult)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *smsService) CheckVerificationCode(ctx context.Context, in *CheckVerificationCodeRequest, opts ...client.CallOption) (*CheckVerificationCodeResult, error) {
+	req := c.c.NewRequest(c.name, "Sms.CheckVerificationCode", in)
+	out := new(CheckVerificationCodeResult)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *smsService) SendVerificationCode(ctx context.Context, in *SendVerificationCodeRequest, opts ...client.CallOption) (*empty.Empty, error) {
@@ -83,31 +104,23 @@ func (c *smsService) SendShippingNotice(ctx context.Context, in *SendShippingNot
 	return out, nil
 }
 
-func (c *smsService) CheckVerificationCode(ctx context.Context, in *CheckVerificationCodeRequest, opts ...client.CallOption) (*CheckVerificationCodeResult, error) {
-	req := c.c.NewRequest(c.name, "Sms.CheckVerificationCode", in)
-	out := new(CheckVerificationCodeResult)
-	err := c.c.Call(ctx, req, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // Server API for Sms service
 
 type SmsHandler interface {
+	CreateVerificationCode(context.Context, *CreateVerificationCodeRequest, *CreateVerificationCodeResult) error
+	CheckVerificationCode(context.Context, *CheckVerificationCodeRequest, *CheckVerificationCodeResult) error
 	SendVerificationCode(context.Context, *SendVerificationCodeRequest, *empty.Empty) error
 	SendOrderConfirmation(context.Context, *SendOrderConfirmationRequest, *empty.Empty) error
 	SendShippingNotice(context.Context, *SendShippingNoticeRequest, *empty.Empty) error
-	CheckVerificationCode(context.Context, *CheckVerificationCodeRequest, *CheckVerificationCodeResult) error
 }
 
 func RegisterSmsHandler(s server.Server, hdlr SmsHandler, opts ...server.HandlerOption) error {
 	type sms interface {
+		CreateVerificationCode(ctx context.Context, in *CreateVerificationCodeRequest, out *CreateVerificationCodeResult) error
+		CheckVerificationCode(ctx context.Context, in *CheckVerificationCodeRequest, out *CheckVerificationCodeResult) error
 		SendVerificationCode(ctx context.Context, in *SendVerificationCodeRequest, out *empty.Empty) error
 		SendOrderConfirmation(ctx context.Context, in *SendOrderConfirmationRequest, out *empty.Empty) error
 		SendShippingNotice(ctx context.Context, in *SendShippingNoticeRequest, out *empty.Empty) error
-		CheckVerificationCode(ctx context.Context, in *CheckVerificationCodeRequest, out *CheckVerificationCodeResult) error
 	}
 	type Sms struct {
 		sms
@@ -120,6 +133,14 @@ type smsHandler struct {
 	SmsHandler
 }
 
+func (h *smsHandler) CreateVerificationCode(ctx context.Context, in *CreateVerificationCodeRequest, out *CreateVerificationCodeResult) error {
+	return h.SmsHandler.CreateVerificationCode(ctx, in, out)
+}
+
+func (h *smsHandler) CheckVerificationCode(ctx context.Context, in *CheckVerificationCodeRequest, out *CheckVerificationCodeResult) error {
+	return h.SmsHandler.CheckVerificationCode(ctx, in, out)
+}
+
 func (h *smsHandler) SendVerificationCode(ctx context.Context, in *SendVerificationCodeRequest, out *empty.Empty) error {
 	return h.SmsHandler.SendVerificationCode(ctx, in, out)
 }
@@ -130,8 +151,4 @@ func (h *smsHandler) SendOrderConfirmation(ctx context.Context, in *SendOrderCon
 
 func (h *smsHandler) SendShippingNotice(ctx context.Context, in *SendShippingNoticeRequest, out *empty.Empty) error {
 	return h.SmsHandler.SendShippingNotice(ctx, in, out)
-}
-
-func (h *smsHandler) CheckVerificationCode(ctx context.Context, in *CheckVerificationCodeRequest, out *CheckVerificationCodeResult) error {
-	return h.SmsHandler.CheckVerificationCode(ctx, in, out)
 }
