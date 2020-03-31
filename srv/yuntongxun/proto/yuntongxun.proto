@@ -2,23 +2,12 @@ syntax = "proto3";
 
 import "google/protobuf/empty.proto";
 
-package sms;
+package yuntongxun;
 
-service Sms {
-    rpc CreateVerificationCode(CreateVerificationCodeRequest) returns (CreateVerificationCodeResult) {}
-    rpc CheckVerificationCode(CheckVerificationCodeRequest) returns (CheckVerificationCodeResult) {}
-
+service Yuntongxun {
     rpc SendVerificationCode(SendVerificationCodeRequest) returns (google.protobuf.Empty) {}
     rpc SendOrderConfirmation(SendOrderConfirmationRequest) returns (google.protobuf.Empty) {}
     rpc SendShippingNotice(SendShippingNoticeRequest) returns (google.protobuf.Empty) {}
-}
-
-message CreateVerificationCodeRequest {
-    string phoneNumber = 1;
-}
-
-message CreateVerificationCodeResult {
-    string code = 1;
 }
 
 message SendVerificationCodeRequest {
@@ -36,13 +25,4 @@ message SendShippingNoticeRequest {
     string phoneNumber = 1;
     string courierCompany = 2;
     string waybillNumber = 3;
-}
-
-message CheckVerificationCodeRequest {
-    string phoneNumber = 1;
-    string code = 2;
-}
-
-message CheckVerificationCodeResult {
-    bool success = 1;
 }

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package sms;
+
+service Sms {
+	rpc SendVerificationCode(Request) returns (Response) {};
+}
+
+message Request {
+	string phoneNumber = 1;
+    string time = 2;
+    string sign = 3;
+}
+
+message Response {
+}

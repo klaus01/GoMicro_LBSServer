@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package smscode;
+
+service Smscode {
+    rpc CreateVerificationCode(CreateVerificationCodeRequest) returns (CreateVerificationCodeResult) {}
+    rpc CheckVerificationCode(CheckVerificationCodeRequest) returns (CheckVerificationCodeResult) {}
+}
+
+message CreateVerificationCodeRequest {
+    string phoneNumber = 1;
+}
+
+message CreateVerificationCodeResult {
+    string code = 1;
+}
+
+message CheckVerificationCodeRequest {
+    string phoneNumber = 1;
+    string code = 2;
+}
+
+message CheckVerificationCodeResult {
+    bool success = 1;
+}

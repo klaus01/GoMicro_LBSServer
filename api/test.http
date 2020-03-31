@@ -1,0 +1,22 @@
+@baseUrl = http://localhost:8080
+
+#################### 验证码相关 ####################
+
+### 发送验证码
+### https://tool.chinaz.com/tools/md5.aspx
+### sign=SMS{phoneNumber}CODE{time}S
+POST {{baseUrl}}/sms/sendVerificationCode
+Content-Type: application/json
+
+{
+  "phoneNumber":"18181994671",
+  "time":4677,
+  "sign":"28bb65027d2dadf52e7a31e15ad4d46d"
+}
+
+
+###
+POST {{baseUrl}}/sms/sendVerificationCode
+Content-Type: application/x-www-form-urlencoded
+
+phoneNumber=78997889783&time=123123
