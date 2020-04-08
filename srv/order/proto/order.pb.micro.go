@@ -36,7 +36,7 @@ var _ server.Option
 // Client API for Order service
 
 type OrderService interface {
-	Get(ctx context.Context, in *GetRequest, opts ...client.CallOption) (*OrderObject, error)
+	Get(ctx context.Context, in *GetRequest, opts ...client.CallOption) (*OrderModel, error)
 	Search(ctx context.Context, in *SearchRequest, opts ...client.CallOption) (*SearchResult, error)
 	Create(ctx context.Context, in *CreateRequest, opts ...client.CallOption) (*CreateResult, error)
 	SetDeliveryInfo(ctx context.Context, in *SetDeliveryInfoRequest, opts ...client.CallOption) (*empty.Empty, error)
@@ -55,9 +55,9 @@ func NewOrderService(name string, c client.Client) OrderService {
 	}
 }
 
-func (c *orderService) Get(ctx context.Context, in *GetRequest, opts ...client.CallOption) (*OrderObject, error) {
+func (c *orderService) Get(ctx context.Context, in *GetRequest, opts ...client.CallOption) (*OrderModel, error) {
 	req := c.c.NewRequest(c.name, "Order.Get", in)
-	out := new(OrderObject)
+	out := new(OrderModel)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (c *orderService) SetPayInfo(ctx context.Context, in *SetPayInfoRequest, op
 // Server API for Order service
 
 type OrderHandler interface {
-	Get(context.Context, *GetRequest, *OrderObject) error
+	Get(context.Context, *GetRequest, *OrderModel) error
 	Search(context.Context, *SearchRequest, *SearchResult) error
 	Create(context.Context, *CreateRequest, *CreateResult) error
 	SetDeliveryInfo(context.Context, *SetDeliveryInfoRequest, *empty.Empty) error
@@ -117,7 +117,7 @@ type OrderHandler interface {
 
 func RegisterOrderHandler(s server.Server, hdlr OrderHandler, opts ...server.HandlerOption) error {
 	type order interface {
-		Get(ctx context.Context, in *GetRequest, out *OrderObject) error
+		Get(ctx context.Context, in *GetRequest, out *OrderModel) error
 		Search(ctx context.Context, in *SearchRequest, out *SearchResult) error
 		Create(ctx context.Context, in *CreateRequest, out *CreateResult) error
 		SetDeliveryInfo(ctx context.Context, in *SetDeliveryInfoRequest, out *empty.Empty) error
@@ -134,7 +134,7 @@ type orderHandler struct {
 	OrderHandler
 }
 
-func (h *orderHandler) Get(ctx context.Context, in *GetRequest, out *OrderObject) error {
+func (h *orderHandler) Get(ctx context.Context, in *GetRequest, out *OrderModel) error {
 	return h.OrderHandler.Get(ctx, in, out)
 }
 

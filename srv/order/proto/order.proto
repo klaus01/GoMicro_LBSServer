@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 package order;
 
 service Order {
-    rpc Get(GetRequest) returns (OrderObject) {}
+    rpc Get(GetRequest) returns (OrderModel) {}
     rpc Search(SearchRequest) returns (SearchResult) {}
     rpc Create(CreateRequest) returns (CreateResult) {}
     rpc SetDeliveryInfo(SetDeliveryInfoRequest) returns (google.protobuf.Empty) {}
@@ -24,16 +24,23 @@ message SearchRequest {
     google.protobuf.Timestamp endDateTime = 4;
     string orderId = 5;
     string phoneNumber = 6;
-    bool isShipped = 7;
+    OrderPayStatus payStatus = 7;
+    bool isShipped = 8;
 }
 
 message SearchResult {
     uint32 pageNo = 1;
     uint32 pageTotal = 2;
-    repeated OrderObject datas = 3;
+    repeated OrderModel datas = 3;
 }
 
-message OrderObject {
+enum OrderPayStatus {
+    BE_PAID = 0;
+    PAID = 1;
+    PAY_EXCEPTION = 2;
+}
+
+message OrderModel {
     string orderId = 1;
     google.protobuf.Timestamp createAt = 2;
     string productName = 3;
@@ -44,13 +51,7 @@ message OrderObject {
     string city = 8;
     string district = 9;
     string address = 10;
-
-    enum PayStatus {
-        BE_PAID = 0;
-        PAID = 1;
-        PAY_EXCEPTION = 2;
-    }
-    PayStatus payStatus = 11;
+    OrderPayStatus payStatus = 11;
     OrderPayInfo payInfo = 12;
     OrderDeliveryInfo deliveryInfo = 13;
 }
