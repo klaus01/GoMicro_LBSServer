@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 package smscode;
 
 service Smscode {
@@ -22,4 +24,10 @@ message CheckVerificationCodeRequest {
 
 message CheckVerificationCodeResult {
     bool success = 1;
+}
+
+message SmscodeModel {
+    string phoneNumber = 1;
+    string code = 2;
+    google.protobuf.Timestamp createAt = 3;
 }

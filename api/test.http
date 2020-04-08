@@ -10,7 +10,7 @@ Content-Type: application/json
 
 {
   "phoneNumber":"18181994671",
-  "time":4677,
+  "time":"4677",
   "sign":"28bb65027d2dadf52e7a31e15ad4d46d"
 }
 

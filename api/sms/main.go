@@ -46,12 +46,12 @@ func (s *Sms) SendVerificationCode(context context.Context, req *sms.Request, re
 	smscodeClient := smscode.NewSmscodeService("go.micro.srv.smscode", s.client)
 	cvcRep, err := smscodeClient.CreateVerificationCode(ctx, &smscode.CreateVerificationCodeRequest{PhoneNumber: req.PhoneNumber})
 	if err != nil {
-		return errors.InternalServerError(id, err.Error())
+		return err
 	}
 
 	yuntongxunClient := yuntongxun.NewYuntongxunService("go.micro.srv.yuntongxun", s.client)
 	if _, err := yuntongxunClient.SendVerificationCode(ctx, &yuntongxun.SendVerificationCodeRequest{PhoneNumber: req.PhoneNumber, Code: cvcRep.Code}); err != nil {
-		return errors.InternalServerError(id, err.Error())
+		return err
 	}
 
 	return nil

@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	smscode "github.com/klaus01/GoMicro_LBSServer/srv/smscode/proto"
 	"github.com/klaus01/GoMicro_LBSServer/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -18,7 +19,7 @@ import (
 	"github.com/micro/go-micro/v2/config/source/file"
 )
 
-// Sms srv
+// Smscode srv
 type Smscode struct {
 	dbCollection *mongo.Collection
 	dbContext    context.Context
@@ -28,25 +29,25 @@ type Smscode struct {
 func (s *Smscode) CreateVerificationCode(ctx context.Context, req *smscode.CreateVerificationCodeRequest, rep *smscode.CreateVerificationCodeResult) error {
 	filter := bson.M{"phoneNumber": req.PhoneNumber}
 	update := bson.M{"$set": bson.M{"createAt": time.Now()}}
-	var smsCode smsCode
-	err := s.dbCollection.FindOneAndUpdate(s.dbContext, filter, update).Decode(&smsCode)
+	var smscodeModel smscode.SmscodeModel
+	err := s.dbCollection.FindOneAndUpdate(s.dbContext, filter, update).Decode(&smscodeModel)
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
 			log.Println("[ERROR]", "查询", req.PhoneNumber, "短信失败", err)
 			return err
 		}
 
-		smsCode.PhoneNumber = req.PhoneNumber
-		smsCode.Code = fmt.Sprintf("%d", 1000+utils.RandomInt(8999))
-		smsCode.CreateAt = time.Now()
-		_, err := s.dbCollection.InsertOne(s.dbContext, smsCode)
+		smscodeModel.PhoneNumber = req.PhoneNumber
+		smscodeModel.Code = fmt.Sprintf("%d", 1000+utils.RandomInt(8999))
+		smscodeModel.CreateAt = &timestamp.Timestamp{Seconds: time.Now().Unix()}
+		_, err := s.dbCollection.InsertOne(s.dbContext, smscodeModel)
 		if err != nil {
 			log.Println("[ERROR]", "插入短信失败", err)
 			return err
 		}
 	}
 
-	rep.Code = smsCode.Code
+	rep.Code = smscodeModel.Code
 
 	return nil
 }
@@ -54,8 +55,8 @@ func (s *Smscode) CreateVerificationCode(ctx context.Context, req *smscode.Creat
 // CheckVerificationCode 校验短信验证码
 func (s *Smscode) CheckVerificationCode(ctx context.Context, req *smscode.CheckVerificationCodeRequest, rep *smscode.CheckVerificationCodeResult) error {
 	filter := bson.M{"phoneNumber": req.PhoneNumber, "code": req.Code}
-	var smsCode smsCode
-	err := s.dbCollection.FindOneAndDelete(s.dbContext, filter).Decode(&smsCode)
+	var smscodeModel smscode.SmscodeModel
+	err := s.dbCollection.FindOneAndDelete(s.dbContext, filter).Decode(&smscodeModel)
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
 			log.Println("[ERROR]", "查询", req.PhoneNumber, "短信失败", err)
@@ -68,12 +69,6 @@ func (s *Smscode) CheckVerificationCode(ctx context.Context, req *smscode.CheckV
 	}
 
 	return nil
-}
-
-type smsCode struct {
-	PhoneNumber string    `bson:"phoneNumber"`
-	Code        string    `bson:"code"`
-	CreateAt    time.Time `bson:"createAt"`
 }
 
 func getCollection(db *mongo.Database, smsCodeExpireAfterSeconds int32) *mongo.Collection {
