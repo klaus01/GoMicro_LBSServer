@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -27,6 +28,10 @@ type Smscode struct {
 
 // CreateVerificationCode 生成短信验证码
 func (s *Smscode) CreateVerificationCode(ctx context.Context, req *smscode.CreateVerificationCodeRequest, rep *smscode.CreateVerificationCodeResult) error {
+	if len(req.PhoneNumber) <= 0 {
+		return errors.New("缺少手机号")
+	}
+
 	filter := bson.M{"phoneNumber": req.PhoneNumber}
 	update := bson.M{"$set": bson.M{"createAt": time.Now()}}
 	var smscodeModel smscode.SmscodeModel
@@ -54,6 +59,13 @@ func (s *Smscode) CreateVerificationCode(ctx context.Context, req *smscode.Creat
 
 // CheckVerificationCode 校验短信验证码
 func (s *Smscode) CheckVerificationCode(ctx context.Context, req *smscode.CheckVerificationCodeRequest, rep *smscode.CheckVerificationCodeResult) error {
+	if len(req.PhoneNumber) <= 0 {
+		return errors.New("缺少手机号")
+	}
+	if len(req.Code) <= 0 {
+		return errors.New("缺少验证码")
+	}
+
 	filter := bson.M{"phoneNumber": req.PhoneNumber, "code": req.Code}
 	var smscodeModel smscode.SmscodeModel
 	err := s.dbCollection.FindOneAndDelete(s.dbContext, filter).Decode(&smscodeModel)
