@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "github.com/klaus01/GoMicro_LBSServer/srv/order/proto/order.proto";
+
+package order;
+
+service OrderAPI {
+    rpc Get(GetRequest) returns (OrderModel) {}
+    rpc Search(SearchRequest) returns (SearchResult) {}
+    rpc Create(APICreateRequest) returns (CreateResult) {}
+    rpc SetDeliveryInfo(SetDeliveryInfoRequest) returns (google.protobuf.Empty) {}
+}
+
+message APICreateRequest {
+    string productName = 1;
+    float productAmount = 2;
+    string name = 3;
+    string phoneNumber = 4;
+    string smsCode = 5;
+    string province = 6;
+    string city = 7;
+    string district = 8;
+    string address = 9;
+    uint64 time = 10;
+    string sign = 11;
+}
