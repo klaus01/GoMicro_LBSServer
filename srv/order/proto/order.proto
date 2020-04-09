@@ -73,12 +73,10 @@ message CreateRequest {
     float productAmount = 2;
     string name = 3;
     string phoneNumber = 4;
-    string smsCode = 5;
-    string province = 6;
-    string city = 7;
+    string province = 5;
+    string city = 6;
+    string district = 7;
     string address = 8;
-    uint64 time = 9;
-    string sign = 10;
 }
 
 message CreateResult {

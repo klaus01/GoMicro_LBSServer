@@ -67,8 +67,7 @@ func (s *Smscode) CheckVerificationCode(ctx context.Context, req *smscode.CheckV
 	}
 
 	filter := bson.M{"phoneNumber": req.PhoneNumber, "code": req.Code}
-	var smscodeModel smscode.SmscodeModel
-	err := s.dbCollection.FindOneAndDelete(s.dbContext, filter).Decode(&smscodeModel)
+	err := s.dbCollection.FindOneAndDelete(s.dbContext, filter).Err()
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
 			log.Println("[ERROR]", "查询", req.PhoneNumber, "短信失败", err)
