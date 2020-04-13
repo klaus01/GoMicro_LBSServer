@@ -14,7 +14,7 @@ import (
 	"github.com/micro/go-micro/v2/errors"
 )
 
-const gSaveName = "go.micro.api.sms"
+const gServiceName = "go.micro.api.sms"
 
 // Sms api
 type Sms struct {
@@ -24,9 +24,9 @@ type Sms struct {
 // SendVerificationCode 发送验证码
 func (s *Sms) SendVerificationCode(context context.Context, req *sms.Request, rep *sms.Response) error {
 	const method string = "sendVerificationCode"
-	const id string = gSaveName + "." + method
+	const id string = gServiceName + "." + method
 
-	ctx, tr := utils.CreateTracing(context, gSaveName, method)
+	ctx, tr := utils.CreateTracing(context, gServiceName, method)
 	defer tr.Finish()
 
 	if len(req.PhoneNumber) <= 0 {
@@ -58,7 +58,7 @@ func (s *Sms) SendVerificationCode(context context.Context, req *sms.Request, re
 }
 
 func main() {
-	service := micro.NewService(micro.Name(gSaveName))
+	service := micro.NewService(micro.Name(gServiceName))
 	sms.RegisterSmsHandler(service.Server(), &Sms{service.Client()})
 	service.Init()
 	service.Run()
