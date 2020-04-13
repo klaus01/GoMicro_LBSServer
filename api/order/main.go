@@ -15,7 +15,7 @@ import (
 	"github.com/micro/go-micro/v2/errors"
 )
 
-const gSaveName = "go.micro.api.order"
+const gServiceName = "go.micro.api.order"
 
 // Order api
 type Order struct {
@@ -25,35 +25,55 @@ type Order struct {
 // Get Get
 func (s *Order) Get(context context.Context, req *srv_order.GetRequest, rep *srv_order.OrderModel) error {
 	const method string = "get"
-	const id string = gSaveName + "." + method
+	const id string = gServiceName + "." + method
 
-	ctx, tr := utils.CreateTracing(context, gSaveName, method)
+	ctx, tr := utils.CreateTracing(context, gServiceName, method)
 	defer tr.Finish()
 
 	orderClient := srv_order.NewOrderService("go.micro.srv.order", s.client)
-	rep, err := orderClient.Get(ctx, req)
+	srvRep, err := orderClient.Get(ctx, req)
+	if err == nil {
+		rep.OrderId = srvRep.OrderId
+		rep.CreateAt = srvRep.CreateAt
+		rep.ProductName = srvRep.ProductName
+		rep.ProductAmount = srvRep.ProductAmount
+		rep.Name = srvRep.Name
+		rep.PhoneNumber = srvRep.PhoneNumber
+		rep.Province = srvRep.Province
+		rep.City = srvRep.City
+		rep.District = srvRep.District
+		rep.Address = srvRep.Address
+		rep.PayStatus = srvRep.PayStatus
+		rep.PayInfo = srvRep.PayInfo
+		rep.DeliveryInfo = srvRep.DeliveryInfo
+	}
 	return err
 }
 
 // Search Search
 func (s *Order) Search(context context.Context, req *srv_order.SearchRequest, rep *srv_order.SearchResult) error {
 	const method string = "search"
-	const id string = gSaveName + "." + method
+	const id string = gServiceName + "." + method
 
-	ctx, tr := utils.CreateTracing(context, gSaveName, method)
+	ctx, tr := utils.CreateTracing(context, gServiceName, method)
 	defer tr.Finish()
 
 	orderClient := srv_order.NewOrderService("go.micro.srv.order", s.client)
-	rep, err := orderClient.Search(ctx, req)
+	srvRep, err := orderClient.Search(ctx, req)
+	if err == nil {
+		rep.PageNo = srvRep.PageNo
+		rep.PageTotal = srvRep.PageTotal
+		rep.Datas = srvRep.Datas
+	}
 	return err
 }
 
 // Create Create
 func (s *Order) Create(context context.Context, req *order.APICreateRequest, rep *srv_order.CreateResult) error {
 	const method string = "create"
-	const id string = gSaveName + "." + method
+	const id string = gServiceName + "." + method
 
-	ctx, tr := utils.CreateTracing(context, gSaveName, method)
+	ctx, tr := utils.CreateTracing(context, gServiceName, method)
 	defer tr.Finish()
 
 	sig := fmt.Sprintf("CREATE%v%v%v%v%v%v%vORDER", req.ProductName, req.ProductAmount, req.Name, req.PhoneNumber, req.SmsCode, req.Address, req.Time)
@@ -84,25 +104,28 @@ func (s *Order) Create(context context.Context, req *order.APICreateRequest, rep
 		Address:       req.Address,
 	}
 	orderClient := srv_order.NewOrderService("go.micro.srv.order", s.client)
-	rep, err = orderClient.Create(ctx, &srvReq)
+	srvRep, err := orderClient.Create(ctx, &srvReq)
+	if err == nil {
+		rep.OrderId = srvRep.OrderId
+	}
 	return err
 }
 
 // SetDeliveryInfo SetDeliveryInfo
 func (s *Order) SetDeliveryInfo(context context.Context, req *srv_order.SetDeliveryInfoRequest, rep *empty.Empty) error {
 	const method string = "search"
-	const id string = gSaveName + "." + method
+	const id string = gServiceName + "." + method
 
-	ctx, tr := utils.CreateTracing(context, gSaveName, method)
+	ctx, tr := utils.CreateTracing(context, gServiceName, method)
 	defer tr.Finish()
 
 	orderClient := srv_order.NewOrderService("go.micro.srv.order", s.client)
-	rep, err := orderClient.SetDeliveryInfo(ctx, req)
+	_, err := orderClient.SetDeliveryInfo(ctx, req)
 	return err
 }
 
 func main() {
-	service := micro.NewService(micro.Name(gSaveName))
+	service := micro.NewService(micro.Name(gServiceName))
 	order.RegisterOrderAPIHandler(service.Server(), &Order{service.Client()})
 	service.Init()
 	service.Run()
