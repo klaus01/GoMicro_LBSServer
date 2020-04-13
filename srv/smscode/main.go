@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -18,7 +17,10 @@ import (
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/config"
 	"github.com/micro/go-micro/v2/config/source/file"
+	"github.com/micro/go-micro/v2/errors"
 )
+
+const gServiceName = "go.micro.srv.smscode"
 
 // Smscode srv
 type Smscode struct {
@@ -28,8 +30,11 @@ type Smscode struct {
 
 // CreateVerificationCode 生成短信验证码
 func (s *Smscode) CreateVerificationCode(ctx context.Context, req *smscode.CreateVerificationCodeRequest, rep *smscode.CreateVerificationCodeResult) error {
+	const method string = "createVerificationCode"
+	const id string = gServiceName + "." + method
+
 	if len(req.PhoneNumber) <= 0 {
-		return errors.New("缺少手机号")
+		return errors.BadRequest(id, "缺少手机号")
 	}
 
 	filter := bson.M{"phoneNumber": req.PhoneNumber}
@@ -59,11 +64,14 @@ func (s *Smscode) CreateVerificationCode(ctx context.Context, req *smscode.Creat
 
 // CheckVerificationCode 校验短信验证码
 func (s *Smscode) CheckVerificationCode(ctx context.Context, req *smscode.CheckVerificationCodeRequest, rep *smscode.CheckVerificationCodeResult) error {
+	const method string = "checkVerificationCode"
+	const id string = gServiceName + "." + method
+
 	if len(req.PhoneNumber) <= 0 {
-		return errors.New("缺少手机号")
+		return errors.BadRequest(id, "缺少手机号")
 	}
 	if len(req.Code) <= 0 {
-		return errors.New("缺少验证码")
+		return errors.BadRequest(id, "缺少验证码")
 	}
 
 	filter := bson.M{"phoneNumber": req.PhoneNumber, "code": req.Code}
@@ -178,7 +186,7 @@ func main() {
 	smsCodeExpireAfterSeconds := int32(yuntongxunConfig.Get("smsCodeExpireAfterSeconds").Int(600))
 	dbCollection := getCollection(db, smsCodeExpireAfterSeconds)
 
-	service := micro.NewService(micro.Name("go.micro.srv.smscode"))
+	service := micro.NewService(micro.Name(gServiceName))
 	smscode.RegisterSmscodeHandler(service.Server(), &Smscode{dbCollection, context.Background()})
 	service.Init()
 	service.Run()

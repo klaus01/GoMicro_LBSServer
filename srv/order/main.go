@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -20,7 +19,10 @@ import (
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/config"
 	"github.com/micro/go-micro/v2/config/source/file"
+	"github.com/micro/go-micro/v2/errors"
 )
+
+const gServiceName = "go.micro.srv.order"
 
 // Order srv
 type Order struct {
@@ -30,13 +32,19 @@ type Order struct {
 
 // Get 获取订单信息
 func (s *Order) Get(ctx context.Context, req *order.GetRequest, rep *order.OrderModel) error {
+	const method string = "get"
+	const id string = gServiceName + "." + method
+
 	if len(req.OrderId) <= 0 {
-		return errors.New("缺少 OrderId")
+		return errors.BadRequest(id, "缺少订单号")
 	}
 
 	filter := bson.M{"orderId": req.OrderId}
 	err := s.dbCollection.FindOne(s.dbContext, filter).Decode(rep)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return errors.NotFound(id, "订单号不存在")
+		}
 		return err
 	}
 
@@ -97,26 +105,29 @@ func (s *Order) Search(ctx context.Context, req *order.SearchRequest, rep *order
 
 // Create Create
 func (s *Order) Create(ctx context.Context, req *order.CreateRequest, rep *order.CreateResult) error {
+	const method string = "create"
+	const id string = gServiceName + "." + method
+
 	if len(req.ProductName) <= 0 {
-		return errors.New("缺少商品名称")
+		return errors.BadRequest(id, "缺少商品名称")
 	}
 	if req.ProductAmount <= 0 {
-		return errors.New("缺少商品价格")
+		return errors.BadRequest(id, "缺少商品价格")
 	}
 	if len(req.Name) <= 0 {
-		return errors.New("缺少收货人姓名")
+		return errors.BadRequest(id, "缺少收货人姓名")
 	}
 	if len(req.PhoneNumber) <= 0 {
-		return errors.New("缺少收货人手机号")
+		return errors.BadRequest(id, "缺少收货人手机号")
 	}
 	if len(req.Province) <= 0 {
-		return errors.New("缺少省名称")
+		return errors.BadRequest(id, "缺少省名称")
 	}
 	if len(req.City) <= 0 {
-		return errors.New("缺少市名称")
+		return errors.BadRequest(id, "缺少市名称")
 	}
 	if len(req.Address) <= 0 {
-		return errors.New("缺少收货地址")
+		return errors.BadRequest(id, "缺少收货地址")
 	}
 
 	orderId := fmt.Sprintf("%v_%v", time.Now().UnixNano(), 1000+utils.RandomInt(8999))
@@ -143,14 +154,17 @@ func (s *Order) Create(ctx context.Context, req *order.CreateRequest, rep *order
 
 // SetDeliveryInfo SetDeliveryInfo
 func (s *Order) SetDeliveryInfo(ctx context.Context, req *order.SetDeliveryInfoRequest, rep *empty.Empty) error {
+	const method string = "setDeliveryInfo"
+	const id string = gServiceName + "." + method
+
 	if len(req.OrderId) <= 0 {
-		return errors.New("缺少订单号")
+		return errors.BadRequest(id, "缺少订单号")
 	}
 	if len(req.CourierCompany) <= 0 {
-		return errors.New("缺少快递公司")
+		return errors.BadRequest(id, "缺少快递公司")
 	}
 	if len(req.WaybillNumber) <= 0 {
-		return errors.New("缺少运单号")
+		return errors.BadRequest(id, "缺少运单号")
 	}
 
 	deliveryInfo := order.OrderDeliveryInfo{
@@ -166,7 +180,7 @@ func (s *Order) SetDeliveryInfo(ctx context.Context, req *order.SetDeliveryInfoR
 		return err
 	}
 	if updateResult.ModifiedCount <= 0 {
-		return errors.New("订单不存在或已填写发货信息")
+		return errors.BadRequest(id, "订单不存在或已填写发货信息")
 	}
 
 	return nil
@@ -174,11 +188,14 @@ func (s *Order) SetDeliveryInfo(ctx context.Context, req *order.SetDeliveryInfoR
 
 // SetPayInfo SetPayInfo
 func (s *Order) SetPayInfo(ctx context.Context, req *order.SetPayInfoRequest, rep *empty.Empty) error {
+	const method string = "setPayInfo"
+	const id string = gServiceName + "." + method
+
 	if len(req.OrderId) <= 0 {
-		return errors.New("缺少订单号")
+		return errors.BadRequest(id, "缺少订单号")
 	}
 	if len(req.ModeName) <= 0 {
-		return errors.New("缺少支付方式")
+		return errors.BadRequest(id, "缺少支付方式")
 	}
 
 	filter := bson.M{"orderId": req.OrderId}
@@ -186,12 +203,12 @@ func (s *Order) SetPayInfo(ctx context.Context, req *order.SetPayInfoRequest, re
 	err := s.dbCollection.FindOne(s.dbContext, filter).Decode(&orderModel)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return errors.New(fmt.Sprintf("订单%v不存在", req.OrderId))
+			return errors.BadRequest(id, fmt.Sprintf("订单%v不存在", req.OrderId))
 		}
 		return err
 	}
 	if orderModel.PayStatus != order.OrderPayStatus_BE_PAID {
-		return errors.New(fmt.Sprintf("订单%v已支付过了", req.OrderId))
+		return errors.BadRequest(id, fmt.Sprintf("订单%v已支付过了", req.OrderId))
 	}
 	var payStatus order.OrderPayStatus
 	if orderModel.ProductAmount == req.Money {
@@ -289,7 +306,7 @@ func main() {
 	db := getDB(dbConfig.Get("uri").String(""), dbConfig.Get("dbName").String(""))
 	dbCollection := getCollection(db)
 
-	service := micro.NewService(micro.Name("go.micro.srv.order"))
+	service := micro.NewService(micro.Name(gServiceName))
 	order.RegisterOrderHandler(service.Server(), &Order{dbCollection, context.Background()})
 	service.Init()
 	service.Run()
