@@ -20,3 +20,38 @@ POST {{baseUrl}}/sms/sendVerificationCode
 Content-Type: application/x-www-form-urlencoded
 
 phoneNumber=78997889783&time=123123
+
+#################### 订单相关 ####################
+
+### 订单列表
+GET {{baseUrl}}/order/search?pageNo=1&pageSize=10
+### 订单列表-订单号
+GET {{baseUrl}}/order/get?orderId=1586874638438130000_2439
+### 订单列表-手机号
+GET {{baseUrl}}/order/get?phoneNumber=18181994671
+### 订单列表-支付状态
+GET {{baseUrl}}/order/get?payStatus=0
+### 订单列表-未发货
+GET {{baseUrl}}/order/get?isShipped=false
+### 订单列表-已发货
+GET {{baseUrl}}/order/get?isShipped=true
+
+### 提交订单
+### https://tool.chinaz.com/tools/md5.aspx
+### sign=CREATE${productName}${productAmount}${name}${phoneNumber}${smsCode}${address}${time}ORDER
+POST {{baseUrl}}/order/create
+Content-Type: application/json
+
+{
+  "productName": "扔在城",
+  "productAmount":38,
+  "name":"静静",
+  "phoneNumber":"18181994671",
+  "smsCode": "7444",
+  "province": "四川省",
+  "city": "成都市",
+  "district": "双流区",
+  "address": "大件路156号fds",
+  "time":1231233,
+  "sign":"1d9ae9995352deaa6c38504ed5f26f4b"
+}

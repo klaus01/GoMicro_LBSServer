@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	sms "github.com/klaus01/GoMicro_LBSServer/api/sms/proto"
 	smscode "github.com/klaus01/GoMicro_LBSServer/srv/smscode/proto"
@@ -59,7 +60,11 @@ func (s *Sms) SendVerificationCode(context context.Context, req *sms.Request, re
 
 func main() {
 	service := micro.NewService(micro.Name(gServiceName))
-	sms.RegisterSmsHandler(service.Server(), &Sms{service.Client()})
 	service.Init()
-	service.Run()
+	if err := sms.RegisterSmsHandler(service.Server(), &Sms{service.Client()}); err != nil {
+		log.Fatal(err)
+	}
+	if err := service.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

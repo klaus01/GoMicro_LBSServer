@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	order "github.com/klaus01/GoMicro_LBSServer/api/order/proto"
+	api_order "github.com/klaus01/GoMicro_LBSServer/api/order/proto"
 	srv_order "github.com/klaus01/GoMicro_LBSServer/srv/order/proto"
 	smscode "github.com/klaus01/GoMicro_LBSServer/srv/smscode/proto"
 	"github.com/klaus01/GoMicro_LBSServer/utils"
@@ -23,7 +24,7 @@ type Order struct {
 }
 
 // Get Get
-func (s *Order) Get(context context.Context, req *srv_order.GetRequest, rep *srv_order.OrderModel) error {
+func (s *Order) Get(context context.Context, req *api_order.GetRequest, rep *api_order.OrderModel) error {
 	const method string = "get"
 	const id string = gServiceName + "." + method
 
@@ -31,27 +32,16 @@ func (s *Order) Get(context context.Context, req *srv_order.GetRequest, rep *srv
 	defer tr.Finish()
 
 	orderClient := srv_order.NewOrderService("go.micro.srv.order", s.client)
-	srvRep, err := orderClient.Get(ctx, req)
+	srvReq := srv_order.GetRequest{OrderId: req.OrderId}
+	srvRep, err := orderClient.Get(ctx, &srvReq)
 	if err == nil {
-		rep.OrderId = srvRep.OrderId
-		rep.CreateAt = srvRep.CreateAt
-		rep.ProductName = srvRep.ProductName
-		rep.ProductAmount = srvRep.ProductAmount
-		rep.Name = srvRep.Name
-		rep.PhoneNumber = srvRep.PhoneNumber
-		rep.Province = srvRep.Province
-		rep.City = srvRep.City
-		rep.District = srvRep.District
-		rep.Address = srvRep.Address
-		rep.PayStatus = srvRep.PayStatus
-		rep.PayInfo = srvRep.PayInfo
-		rep.DeliveryInfo = srvRep.DeliveryInfo
+		convertSrvOrderToAPIOrder(srvRep, rep)
 	}
 	return err
 }
 
 // Search Search
-func (s *Order) Search(context context.Context, req *srv_order.SearchRequest, rep *srv_order.SearchResult) error {
+func (s *Order) Search(context context.Context, req *api_order.SearchRequest, rep *api_order.SearchResult) error {
 	const method string = "search"
 	const id string = gServiceName + "." + method
 
@@ -59,17 +49,30 @@ func (s *Order) Search(context context.Context, req *srv_order.SearchRequest, re
 	defer tr.Finish()
 
 	orderClient := srv_order.NewOrderService("go.micro.srv.order", s.client)
-	srvRep, err := orderClient.Search(ctx, req)
+	srvReq := srv_order.SearchRequest{
+		PageNo:        req.PageNo,
+		PageSize:      req.PageSize,
+		BeginDateTime: req.BeginDateTime,
+		EndDateTime:   req.EndDateTime,
+		PhoneNumber:   req.PhoneNumber,
+		PayStatus:     srv_order.OrderPayStatus(req.PayStatus),
+		IsShipped:     req.IsShipped,
+	}
+	srvRep, err := orderClient.Search(ctx, &srvReq)
 	if err == nil {
 		rep.PageNo = srvRep.PageNo
 		rep.PageTotal = srvRep.PageTotal
-		rep.Datas = srvRep.Datas
+		for _, data := range srvRep.Datas {
+			newData := &api_order.OrderModel{}
+			convertSrvOrderToAPIOrder(data, newData)
+			rep.Datas = append(rep.Datas, newData)
+		}
 	}
 	return err
 }
 
 // Create Create
-func (s *Order) Create(context context.Context, req *order.APICreateRequest, rep *srv_order.CreateResult) error {
+func (s *Order) Create(context context.Context, req *api_order.CreateRequest, rep *api_order.CreateResult) error {
 	const method string = "create"
 	const id string = gServiceName + "." + method
 
@@ -93,6 +96,7 @@ func (s *Order) Create(context context.Context, req *order.APICreateRequest, rep
 		return errors.BadRequest(id, "手机验证码错误或已过期")
 	}
 
+	orderClient := srv_order.NewOrderService("go.micro.srv.order", s.client)
 	srvReq := srv_order.CreateRequest{
 		ProductName:   req.ProductName,
 		ProductAmount: req.ProductAmount,
@@ -103,7 +107,6 @@ func (s *Order) Create(context context.Context, req *order.APICreateRequest, rep
 		District:      req.District,
 		Address:       req.Address,
 	}
-	orderClient := srv_order.NewOrderService("go.micro.srv.order", s.client)
 	srvRep, err := orderClient.Create(ctx, &srvReq)
 	if err == nil {
 		rep.OrderId = srvRep.OrderId
@@ -112,7 +115,7 @@ func (s *Order) Create(context context.Context, req *order.APICreateRequest, rep
 }
 
 // SetDeliveryInfo SetDeliveryInfo
-func (s *Order) SetDeliveryInfo(context context.Context, req *srv_order.SetDeliveryInfoRequest, rep *empty.Empty) error {
+func (s *Order) SetDeliveryInfo(context context.Context, req *api_order.SetDeliveryInfoRequest, rep *empty.Empty) error {
 	const method string = "search"
 	const id string = gServiceName + "." + method
 
@@ -120,13 +123,46 @@ func (s *Order) SetDeliveryInfo(context context.Context, req *srv_order.SetDeliv
 	defer tr.Finish()
 
 	orderClient := srv_order.NewOrderService("go.micro.srv.order", s.client)
-	_, err := orderClient.SetDeliveryInfo(ctx, req)
+	srvReq := srv_order.SetDeliveryInfoRequest{
+		OrderId:        req.OrderId,
+		CourierCompany: req.CourierCompany,
+		WaybillNumber:  req.WaybillNumber,
+	}
+	_, err := orderClient.SetDeliveryInfo(ctx, &srvReq)
 	return err
+}
+
+func convertSrvOrderToAPIOrder(srvOrder *srv_order.OrderModel, apiOrder *api_order.OrderModel) {
+	apiOrder.OrderId = srvOrder.OrderId
+	apiOrder.CreateAt = srvOrder.CreateAt
+	apiOrder.ProductName = srvOrder.ProductName
+	apiOrder.ProductAmount = srvOrder.ProductAmount
+	apiOrder.Name = srvOrder.Name
+	apiOrder.PhoneNumber = srvOrder.PhoneNumber
+	apiOrder.Province = srvOrder.Province
+	apiOrder.City = srvOrder.City
+	apiOrder.District = srvOrder.District
+	apiOrder.Address = srvOrder.Address
+	apiOrder.PayStatus = api_order.OrderPayStatus(srvOrder.PayStatus)
+	if srvOrder.PayInfo != nil {
+		apiOrder.PayInfo.ModeName = srvOrder.PayInfo.ModeName
+		apiOrder.PayInfo.Money = srvOrder.PayInfo.Money
+		apiOrder.PayInfo.CreateAt = srvOrder.PayInfo.CreateAt
+	}
+	if srvOrder.DeliveryInfo != nil {
+		apiOrder.DeliveryInfo.CourierCompany = srvOrder.DeliveryInfo.CourierCompany
+		apiOrder.DeliveryInfo.WaybillNumber = srvOrder.DeliveryInfo.WaybillNumber
+		apiOrder.DeliveryInfo.CreateAt = srvOrder.DeliveryInfo.CreateAt
+	}
 }
 
 func main() {
 	service := micro.NewService(micro.Name(gServiceName))
-	order.RegisterOrderAPIHandler(service.Server(), &Order{service.Client()})
 	service.Init()
-	service.Run()
+	if err := api_order.RegisterOrderHandler(service.Server(), &Order{service.Client()}); err != nil {
+		log.Fatal(err)
+	}
+	if err := service.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

@@ -187,7 +187,11 @@ func main() {
 	dbCollection := getCollection(db, smsCodeExpireAfterSeconds)
 
 	service := micro.NewService(micro.Name(gServiceName))
-	smscode.RegisterSmscodeHandler(service.Server(), &Smscode{dbCollection, context.Background()})
 	service.Init()
-	service.Run()
+	if err := smscode.RegisterSmscodeHandler(service.Server(), &Smscode{dbCollection, context.Background()}); err != nil {
+		log.Fatal(err)
+	}
+	if err := service.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

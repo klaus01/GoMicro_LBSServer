@@ -148,6 +148,7 @@ func (s *Order) Create(ctx context.Context, req *order.CreateRequest, rep *order
 		log.Println("[ERROR]", "插入订单失败", err)
 		return err
 	}
+	rep.OrderId = orderId
 
 	return nil
 }
@@ -307,7 +308,11 @@ func main() {
 	dbCollection := getCollection(db)
 
 	service := micro.NewService(micro.Name(gServiceName))
-	order.RegisterOrderHandler(service.Server(), &Order{dbCollection, context.Background()})
 	service.Init()
-	service.Run()
+	if err := order.RegisterOrderHandler(service.Server(), &Order{dbCollection, context.Background()}); err != nil {
+		log.Fatal(err)
+	}
+	if err := service.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
